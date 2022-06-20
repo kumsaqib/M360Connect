@@ -1,7 +1,7 @@
 using System.Web.Http;
 using System.Web.Mvc;
 
-namespace M360Connect.Areas.HelpPage
+namespace Connect360.Areas.HelpPage
 {
     public class HelpPageAreaRegistration : AreaRegistration
     {

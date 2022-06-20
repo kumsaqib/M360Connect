@@ -1,11 +1,11 @@
 using System.Web.Http;
 using WebActivatorEx;
-using M360Connect;
+using Connect360;
 using Swashbuckle.Application;
 
 [assembly: PreApplicationStartMethod(typeof(SwaggerConfig), "Register")]
 
-namespace M360Connect
+namespace Connect360
 {
     public class SwaggerConfig
     {
@@ -32,7 +32,7 @@ namespace M360Connect
                         // hold additional metadata for an API. Version and title are required but you can also provide
                         // additional fields by chaining methods off SingleApiVersion.
                         //
-                        c.SingleApiVersion("v1", "M360Connect");
+                        c.SingleApiVersion("v1", "Connect360");
 
                         // If you want the output Swagger docs to be indented properly, enable the "PrettyPrint" option.
                         //

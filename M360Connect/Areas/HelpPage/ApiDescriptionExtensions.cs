@@ -3,7 +3,7 @@ using System.Text;
 using System.Web;
 using System.Web.Http.Description;
 
-namespace M360Connect.Areas.HelpPage
+namespace Connect360.Areas.HelpPage
 {
     public static class ApiDescriptionExtensions
     {

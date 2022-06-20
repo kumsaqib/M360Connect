@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Net.Http.Headers;
 using System.Web.Http.Description;
-using M360Connect.Areas.HelpPage.ModelDescriptions;
+using Connect360.Areas.HelpPage.ModelDescriptions;
 
-namespace M360Connect.Areas.HelpPage.Models
+namespace Connect360.Areas.HelpPage.Models
 {
     /// <summary>
     /// The model that represents an API displayed on the help page.

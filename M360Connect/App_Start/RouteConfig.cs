@@ -5,7 +5,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
 
-namespace M360Connect
+namespace Connect360
 {
     public class RouteConfig
     {

@@ -1,10 +1,10 @@
 using System;
 using System.Web.Http;
 using System.Web.Mvc;
-using M360Connect.Areas.HelpPage.ModelDescriptions;
-using M360Connect.Areas.HelpPage.Models;
+using Connect360.Areas.HelpPage.ModelDescriptions;
+using Connect360.Areas.HelpPage.Models;
 
-namespace M360Connect.Areas.HelpPage.Controllers
+namespace Connect360.Areas.HelpPage.Controllers
 {
     /// <summary>
     /// The controller that will handle requests for the help page.

@@ -11,10 +11,10 @@ using System.Net.Http.Headers;
 using System.Web.Http;
 using System.Web.Http.Controllers;
 using System.Web.Http.Description;
-using M360Connect.Areas.HelpPage.ModelDescriptions;
-using M360Connect.Areas.HelpPage.Models;
+using Connect360.Areas.HelpPage.ModelDescriptions;
+using Connect360.Areas.HelpPage.Models;
 
-namespace M360Connect.Areas.HelpPage
+namespace Connect360.Areas.HelpPage
 {
     public static class HelpPageConfigurationExtensions
     {

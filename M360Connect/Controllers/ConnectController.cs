@@ -5,18 +5,20 @@ using System.Net;
 using System.Net.Http;
 using System.Web.Configuration;
 using System.Web.Http;
-using M360Connect.Models;
+using Connect360.Models;
 
-namespace M360Connect.Controllers
+namespace Connect360.Controllers
 {
-    public class ConnectController : ApiController
+
+    [Route("api/1.0/[controller]")]
+    public class RegistrationController : ApiController
     {
-         string serviceBaseUrl = System.Configuration.ConfigurationManager.AppSettings["ServiceURL"];
+        string serviceBaseUrl = System.Configuration.ConfigurationManager.AppSettings["ServiceURL"];
 
+        [Route("EcrRegister")]
         [HttpPost]
-        public IHttpActionResult ecr_register([FromBody] register_model model)
+        public IHttpActionResult Ecr_register([FromBody] register_model model)
         {
-
             string ReturnMessage = string.Empty;
 
             try
@@ -59,102 +61,9 @@ namespace M360Connect.Controllers
         }
 
 
+        [Route("PosSignIn")]
         [HttpPost]
-        public IHttpActionResult pos_register([FromBody] register_model model)
-        {
-
-            string ReturnMessage = string.Empty;
-
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    ReturnMessage = string.Join("; ", ModelState.Values
-                                      .SelectMany(x => x.Errors)
-                                      .Select(x => x.ErrorMessage));
-                    return BadRequest(ReturnMessage);
-                }
-
-                using (var client = new HttpClient())
-                {
-                    client.BaseAddress = new Uri(serviceBaseUrl);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Add("Accept", "*/*");
-                    client.DefaultRequestHeaders.Accept.Add(
-                        new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-
-                    client.DefaultRequestHeaders.Add("Authorization", "Basic YWRtaW5AbG9jYWxob3N0OmFkbWlu");
-
-                    //client.DefaultRequestHeaders.Add("Username", "admin@localhost");
-                    //client.DefaultRequestHeaders.Add("Password", "admin");
-
-                    HttpResponseMessage response = client.PostAsJsonAsync("api/register", model).Result;
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var result = response.Content.ReadAsAsync<dynamic>().Result;
-                        return Ok(result);
-                    }
-                    return StatusCode(response.StatusCode);
-                }
-            }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
-            }
-
-        }
-
-
-
-
-        [HttpPost]
-        public IHttpActionResult add_rosteritem([FromBody] add_rosteritem_model model)
-        {
-
-            string ReturnMessage = string.Empty;
-
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    ReturnMessage = string.Join("; ", ModelState.Values
-                                      .SelectMany(x => x.Errors)
-                                      .Select(x => x.ErrorMessage));
-                    return BadRequest(ReturnMessage);
-                }
-
-                using (var client = new HttpClient())
-                {
-                    client.BaseAddress = new Uri(serviceBaseUrl);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Add("Accept", "*/*");
-                    client.DefaultRequestHeaders.Accept.Add(
-                        new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-
-                    client.DefaultRequestHeaders.Add("Authorization", "Basic YWRtaW5AbG9jYWxob3N0OmFkbWlu");
-
-                    //client.DefaultRequestHeaders.Add("Username", "admin@localhost");
-                    //client.DefaultRequestHeaders.Add("Password", "admin");
-
-                    HttpResponseMessage response = client.PostAsJsonAsync("api/add_rosteritem", model).Result;
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var result = response.Content.ReadAsAsync<dynamic>().Result;
-                        return Ok(result);
-                    }
-                    return StatusCode(response.StatusCode);
-                }
-            }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
-            }
-
-        }
-
-
-        [HttpPost]
-        public IHttpActionResult sign_in([FromBody] sign_in_model model)
+        public IHttpActionResult Sign_in([FromBody] sign_in_model model)
         {
             string ReturnMessage = string.Empty;
 
@@ -188,7 +97,7 @@ namespace M360Connect.Controllers
                     if (response.IsSuccessStatusCode)
                     {
                         var _registered_user = response.Content.ReadAsAsync<string[]>().Result;
-                        if (!_registered_user.Contains(model.pos))
+                        if (!_registered_user.Contains(model.pos.ToLower()))
                         {
                             register_model __ = new register_model()
                             {
@@ -200,21 +109,19 @@ namespace M360Connect.Controllers
 
                             if (response.IsSuccessStatusCode)
                             {
-                                if (_registered_user.Contains(model.ecr))
+                                if (_registered_user.Contains(model.ecr.ToLower()))
                                 {
                                     get_roster_model ___ = new get_roster_model()
                                     {
                                         host = model.host,
-                                        user  = model.ecr
+                                        user = model.ecr
                                     };
                                     response = client.PostAsJsonAsync("api/get_roster", ___).Result;
                                     if (response.IsSuccessStatusCode)
                                     {
                                         var _roster = response.Content.ReadAsAsync<List<get_roster_responsemodel>>().Result.FirstOrDefault();
                                         if (_roster != null)
-                                        {
-                                            return Ok(new {Code = 500 ,Message = model.ecr + "is already attached"});
-                                        }
+                                            return Ok(new { Code = 500, Message = model.ecr + "is already attached" });
                                         else
                                         {
                                             add_rosteritem_model ____1 = new add_rosteritem_model()
@@ -246,11 +153,11 @@ namespace M360Connect.Controllers
                                                 var _addedroster = response.Content.ReadAsAsync<string>().Result;
                                                 message_model _message = new message_model()
                                                 {
-                                                    type  = "normal",
+                                                    type = "normal",
                                                     from = model.pos + "@" + model.host,
                                                     to = model.ecr + "@" + model.host,
-                                                    subject = "New Pos",
-                                                    body = "----------"
+                                                    subject = "Pairing",
+                                                    body = model.pos
                                                 };
                                                 response = client.PostAsJsonAsync("api/send_message", _message).Result;
                                                 if (response.IsSuccessStatusCode)
@@ -260,14 +167,12 @@ namespace M360Connect.Controllers
                                     }
                                 }
                                 else
-                                {
-                                    return Ok(new { Code = 404, Message =  "Please first register the ECR-" + model.ecr + " ID" });
-                                }
+                                    return Ok(new { Code = 404, Message = "Please first register the ECR-" + model.ecr + " ID" });
                             }
                         }
                         else
                         {
-                            if (_registered_user.Contains(model.ecr))
+                            if (_registered_user.Contains(model.ecr.ToLower()))
                             {
                                 get_roster_model ___ = new get_roster_model()
                                 {
@@ -319,8 +224,8 @@ namespace M360Connect.Controllers
                                                 type = "normal",
                                                 from = model.pos + "@" + model.host,
                                                 to = model.ecr + "@" + model.host,
-                                                subject = "New Pos",
-                                                body = "----------"
+                                                subject = "Pairing",
+                                                body = model.pos
                                             };
                                             response = client.PostAsJsonAsync("api/send_message", _message).Result;
                                             if (response.IsSuccessStatusCode)
@@ -330,9 +235,7 @@ namespace M360Connect.Controllers
                                 }
                             }
                             else
-                            {
                                 return Ok(new { Code = 404, Message = "Please first register the ECR-" + model.ecr + " ID" });
-                            }
                         }
                     }
                     return StatusCode(response.StatusCode);
@@ -345,128 +248,224 @@ namespace M360Connect.Controllers
 
         }
 
-        [HttpPost]
-        public IHttpActionResult registered_users([FromBody] registered_users_model model)
-        {
 
-            string ReturnMessage = string.Empty;
+        //[Route("PosRegister")]
+        //[HttpPost]
+        //public IHttpActionResult pos_register([FromBody] register_model model)
+        //{
 
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    ReturnMessage = string.Join("; ", ModelState.Values
-                                      .SelectMany(x => x.Errors)
-                                      .Select(x => x.ErrorMessage));
-                    return BadRequest(ReturnMessage);
-                }
+        //    string ReturnMessage = string.Empty;
 
-                using (var client = new HttpClient())
-                {
-                    client.BaseAddress = new Uri(serviceBaseUrl);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Add("Accept", "*/*");
-                    client.DefaultRequestHeaders.Accept.Add(
-                        new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+        //    try
+        //    {
+        //        if (!ModelState.IsValid)
+        //        {
+        //            ReturnMessage = string.Join("; ", ModelState.Values
+        //                              .SelectMany(x => x.Errors)
+        //                              .Select(x => x.ErrorMessage));
+        //            return BadRequest(ReturnMessage);
+        //        }
 
-                    client.DefaultRequestHeaders.Add("Authorization", "Basic YWRtaW5AbG9jYWxob3N0OmFkbWlu");
+        //        using (var client = new HttpClient())
+        //        {
+        //            client.BaseAddress = new Uri(serviceBaseUrl);
+        //            client.DefaultRequestHeaders.Accept.Clear();
+        //            client.DefaultRequestHeaders.Add("Accept", "*/*");
+        //            client.DefaultRequestHeaders.Accept.Add(
+        //                new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
 
-                    //client.DefaultRequestHeaders.Add("Username", "admin@localhost");
-                    //client.DefaultRequestHeaders.Add("Password", "admin");
+        //            client.DefaultRequestHeaders.Add("Authorization", "Basic YWRtaW5AbG9jYWxob3N0OmFkbWlu");
 
-                    HttpResponseMessage response = client.PostAsJsonAsync("api/registered_users", model).Result;
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var result = response.Content.ReadAsAsync<dynamic>().Result;
-                        return Ok(result);
-                    }
-                    return StatusCode(response.StatusCode);
-                }
-            }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
-            }
+        //            //client.DefaultRequestHeaders.Add("Username", "admin@localhost");
+        //            //client.DefaultRequestHeaders.Add("Password", "admin");
 
-        }
+        //            HttpResponseMessage response = client.PostAsJsonAsync("api/register", model).Result;
+        //            if (response.IsSuccessStatusCode)
+        //            {
+        //                var result = response.Content.ReadAsAsync<dynamic>().Result;
+        //                return Ok(result);
+        //            }
+        //            return StatusCode(response.StatusCode);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return InternalServerError(ex);
+        //    }
 
-        [HttpPost]
-        public IHttpActionResult connected_users()
-        {
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    client.BaseAddress = new Uri(serviceBaseUrl);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Add("Accept", "*/*");
-                    client.DefaultRequestHeaders.Accept.Add(
-                        new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+        //}
 
-                    client.DefaultRequestHeaders.Add("Authorization", "Basic YWRtaW5AbG9jYWxob3N0OmFkbWlu");
 
-                    //client.DefaultRequestHeaders.Add("Username", "admin@localhost");
-                    //client.DefaultRequestHeaders.Add("Password", "admin");
+        //[HttpPost]
+        //public IHttpActionResult add_rosteritem([FromBody] add_rosteritem_model model)
+        //{
 
-                    HttpResponseMessage response = client.PostAsJsonAsync("api/connected_users", new { }).Result;
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var result = response.Content.ReadAsAsync<dynamic>().Result;
-                        return Ok(result);
-                    }
-                    return StatusCode(response.StatusCode);
-                }
-            }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
-            }
+        //    string ReturnMessage = string.Empty;
 
-        }
+        //    try
+        //    {
+        //        if (!ModelState.IsValid)
+        //        {
+        //            ReturnMessage = string.Join("; ", ModelState.Values
+        //                              .SelectMany(x => x.Errors)
+        //                              .Select(x => x.ErrorMessage));
+        //            return BadRequest(ReturnMessage);
+        //        }
 
-        [HttpPost]
-        public IHttpActionResult get_roster([FromBody] get_roster_model model)
-        {
-            string ReturnMessage = string.Empty;
+        //        using (var client = new HttpClient())
+        //        {
+        //            client.BaseAddress = new Uri(serviceBaseUrl);
+        //            client.DefaultRequestHeaders.Accept.Clear();
+        //            client.DefaultRequestHeaders.Add("Accept", "*/*");
+        //            client.DefaultRequestHeaders.Accept.Add(
+        //                new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
 
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    ReturnMessage = string.Join("; ", ModelState.Values
-                                      .SelectMany(x => x.Errors)
-                                      .Select(x => x.ErrorMessage));
-                    return BadRequest(ReturnMessage);
-                }
+        //            client.DefaultRequestHeaders.Add("Authorization", "Basic YWRtaW5AbG9jYWxob3N0OmFkbWlu");
 
-                using (var client = new HttpClient())
-                {
-                    client.BaseAddress = new Uri(serviceBaseUrl);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Add("Accept", "*/*");
-                    client.DefaultRequestHeaders.Accept.Add(
-                        new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+        //            //client.DefaultRequestHeaders.Add("Username", "admin@localhost");
+        //            //client.DefaultRequestHeaders.Add("Password", "admin");
 
-                    client.DefaultRequestHeaders.Add("Authorization", "Basic YWRtaW5AbG9jYWxob3N0OmFkbWlu");
+        //            HttpResponseMessage response = client.PostAsJsonAsync("api/add_rosteritem", model).Result;
+        //            if (response.IsSuccessStatusCode)
+        //            {
+        //                var result = response.Content.ReadAsAsync<dynamic>().Result;
+        //                return Ok(result);
+        //            }
+        //            return StatusCode(response.StatusCode);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return InternalServerError(ex);
+        //    }
 
-                    //client.DefaultRequestHeaders.Add("Username", "admin@localhost");
-                    //client.DefaultRequestHeaders.Add("Password", "admin");
+        //}
 
-                    HttpResponseMessage response = client.PostAsJsonAsync("api/get_roster", model).Result;
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var result = response.Content.ReadAsAsync<dynamic>().Result;
-                        return Ok(result);
-                    }
-                    return StatusCode(response.StatusCode);
-                }
-            }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
-            }
 
-        }
+
+
+        //[HttpPost]
+        //public IHttpActionResult registered_users([FromBody] registered_users_model model)
+        //{
+
+        //    string ReturnMessage = string.Empty;
+
+        //    try
+        //    {
+        //        if (!ModelState.IsValid)
+        //        {
+        //            ReturnMessage = string.Join("; ", ModelState.Values
+        //                              .SelectMany(x => x.Errors)
+        //                              .Select(x => x.ErrorMessage));
+        //            return BadRequest(ReturnMessage);
+        //        }
+
+        //        using (var client = new HttpClient())
+        //        {
+        //            client.BaseAddress = new Uri(serviceBaseUrl);
+        //            client.DefaultRequestHeaders.Accept.Clear();
+        //            client.DefaultRequestHeaders.Add("Accept", "*/*");
+        //            client.DefaultRequestHeaders.Accept.Add(
+        //                new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+        //            client.DefaultRequestHeaders.Add("Authorization", "Basic YWRtaW5AbG9jYWxob3N0OmFkbWlu");
+
+        //            //client.DefaultRequestHeaders.Add("Username", "admin@localhost");
+        //            //client.DefaultRequestHeaders.Add("Password", "admin");
+
+        //            HttpResponseMessage response = client.PostAsJsonAsync("api/registered_users", model).Result;
+        //            if (response.IsSuccessStatusCode)
+        //            {
+        //                var result = response.Content.ReadAsAsync<dynamic>().Result;
+        //                return Ok(result);
+        //            }
+        //            return StatusCode(response.StatusCode);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return InternalServerError(ex);
+        //    }
+
+        //}
+
+        //[HttpPost]
+        //public IHttpActionResult connected_users()
+        //{
+        //    try
+        //    {
+        //        using (var client = new HttpClient())
+        //        {
+        //            client.BaseAddress = new Uri(serviceBaseUrl);
+        //            client.DefaultRequestHeaders.Accept.Clear();
+        //            client.DefaultRequestHeaders.Add("Accept", "*/*");
+        //            client.DefaultRequestHeaders.Accept.Add(
+        //                new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+        //            client.DefaultRequestHeaders.Add("Authorization", "Basic YWRtaW5AbG9jYWxob3N0OmFkbWlu");
+
+        //            //client.DefaultRequestHeaders.Add("Username", "admin@localhost");
+        //            //client.DefaultRequestHeaders.Add("Password", "admin");
+
+        //            HttpResponseMessage response = client.PostAsJsonAsync("api/connected_users", new { }).Result;
+        //            if (response.IsSuccessStatusCode)
+        //            {
+        //                var result = response.Content.ReadAsAsync<dynamic>().Result;
+        //                return Ok(result);
+        //            }
+        //            return StatusCode(response.StatusCode);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return InternalServerError(ex);
+        //    }
+
+        //}
+
+        //[HttpPost]
+        //public IHttpActionResult get_roster([FromBody] get_roster_model model)
+        //{
+        //    string ReturnMessage = string.Empty;
+
+        //    try
+        //    {
+        //        if (!ModelState.IsValid)
+        //        {
+        //            ReturnMessage = string.Join("; ", ModelState.Values
+        //                              .SelectMany(x => x.Errors)
+        //                              .Select(x => x.ErrorMessage));
+        //            return BadRequest(ReturnMessage);
+        //        }
+
+        //        using (var client = new HttpClient())
+        //        {
+        //            client.BaseAddress = new Uri(serviceBaseUrl);
+        //            client.DefaultRequestHeaders.Accept.Clear();
+        //            client.DefaultRequestHeaders.Add("Accept", "*/*");
+        //            client.DefaultRequestHeaders.Accept.Add(
+        //                new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+        //            client.DefaultRequestHeaders.Add("Authorization", "Basic YWRtaW5AbG9jYWxob3N0OmFkbWlu");
+
+        //            //client.DefaultRequestHeaders.Add("Username", "admin@localhost");
+        //            //client.DefaultRequestHeaders.Add("Password", "admin");
+
+        //            HttpResponseMessage response = client.PostAsJsonAsync("api/get_roster", model).Result;
+        //            if (response.IsSuccessStatusCode)
+        //            {
+        //                var result = response.Content.ReadAsAsync<dynamic>().Result;
+        //                return Ok(result);
+        //            }
+        //            return StatusCode(response.StatusCode);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return InternalServerError(ex);
+        //    }
+
+        //}
 
     }
 }

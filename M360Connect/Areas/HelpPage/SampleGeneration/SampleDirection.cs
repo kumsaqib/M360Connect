@@ -1,4 +1,4 @@
-namespace M360Connect.Areas.HelpPage
+namespace Connect360.Areas.HelpPage
 {
     /// <summary>
     /// Indicates whether the sample is used for request or response

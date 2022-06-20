@@ -4,7 +4,7 @@ using System.Linq;
 using System.Web;
 using System.ComponentModel.DataAnnotations;
 
-namespace M360Connect.Models
+namespace Connect360.Models
 {
     public class registered_users_model
     {

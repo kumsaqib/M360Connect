@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 
-namespace M360Connect.Areas.HelpPage.ModelDescriptions
+namespace Connect360.Areas.HelpPage.ModelDescriptions
 {
     public class ComplexTypeModelDescription : ModelDescription
     {

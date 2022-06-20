@@ -1,7 +1,7 @@
 ﻿using System.Web;
 using System.Web.Mvc;
 
-namespace M360Connect
+namespace Connect360
 {
     public class FilterConfig
     {

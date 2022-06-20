@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace M360Connect.Models
+namespace Connect360.Models
 {
     public class get_roster_responsemodel
     {
